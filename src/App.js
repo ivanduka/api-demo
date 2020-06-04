@@ -5,11 +5,23 @@ import ky from "ky";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { monokai } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import "./App.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const endPoint = "https://api.spacexdata.com/v3/rockets";
 
+const simplify = (api) =>
+  api.map((r) => ({
+    id: r.id,
+    rocket_name: r.rocket_name,
+    description: r.description,
+    height: r.height.meters,
+    engines: r.engines.number,
+    wikipedia: r.wikipedia,
+  }));
+
 export default class App extends Component {
   state = {
+    api: null,
     data: null,
   };
 
@@ -18,12 +30,21 @@ export default class App extends Component {
   }
 
   loadData = async () => {
-    const data = await ky.post(endPoint).json();
-    this.setState({ data });
+    const api = await ky.post(endPoint).json();
+    const data = simplify(api);
+    this.setState({ data, api });
+  };
+
+  simplify = () => {
+    this.setState({ data: simplify(this.state.api) });
+  };
+
+  original = () => {
+    this.setState({ data: this.state.api });
   };
 
   render() {
-    const { data } = this.state;
+    const { data, api } = this.state;
     if (data === null) return <Spinner animation="border" />;
 
     const rockets = data.map((r) => (
@@ -35,15 +56,15 @@ export default class App extends Component {
           Description: <strong>{r.description}</strong>
         </div>
         <div>
-          Height: <strong>{r.height.meters} meters</strong>
+          Height: <strong>{r.height.meters || r.height} meters</strong>
         </div>
         <div>
-          Engines: <strong>{r.engines.number}</strong>
+          Engines: <strong>{r.engines.number || r.engines}</strong>
         </div>
         <div>
           Wikipedia Link:{" "}
           <strong>
-            <a href={r.wikipedia} target="_blank">
+            <a href={r.wikipedia} target="_blank" rel="noopener noreferrer">
               {r.wikipedia}
             </a>
           </strong>
@@ -59,7 +80,7 @@ export default class App extends Component {
         <Container>
           <Row>
             <Col>
-              <h1>Rockets:</h1>
+              <h1>SpaceX Rockets:</h1>
             </Col>
           </Row>
           <Row>
@@ -72,6 +93,20 @@ export default class App extends Component {
           </Row>
           <Row>
             <Col>
+              <Button
+                onClick={
+                  JSON.stringify(api) === JSON.stringify(data)
+                    ? this.simplify
+                    : this.original
+                }
+                size="sm"
+                variant="primary"
+                className="mb-2"
+              >
+                {JSON.stringify(api) === JSON.stringify(data)
+                  ? "Show Simplified Data"
+                  : "Show Original Data"}
+              </Button>
               <SyntaxHighlighter
                 className="narrow"
                 language="json"
