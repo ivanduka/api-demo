@@ -1,0 +1,15 @@
+.narrow {
+  /* max-width: 1000px; */
+}
+
+.rocket {
+  margin-bottom: 40px;
+}
+
+#root {
+  margin: 20px;
+  padding: 20px;
+  border: 1px black solid;
+  border-radius: 15px;
+}
+
